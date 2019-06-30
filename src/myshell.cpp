@@ -36,6 +36,7 @@ private:
     void bye(); // built-in bye
     string rebuildCommand();
     bool exec_cd();
+    int exec_command(string& cmdstring);
 public: 
     Shell(istream& _in, ostream& _out); // construct function
     string getDirName(); // get the name of the directory in the workpath
@@ -136,8 +137,30 @@ bool Shell::exec_cd() {
     return true;
 }
 
+int Shell::exec_command(string& cmdstring) {
+    pid_t pid;
+    int status;
+    if(cmdstring.empty()){
+        return (1);
+    }
+
+    if((pid = fork())<0){
+        status = -1;
+    }
+    
+    else if(pid == 0){
+        execl("/bin/sh", "MyShell", "-c", cmdstring.data(), (char *)0);
+    }
+    else{
+        do {
+            waitpid(pid, &status, WUNTRACED);
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+    }
+    return status;
+}
+
 void Shell::bye() {
-    out << "MyShell: Thanks for using ~\n";
+    out << "MyShell: Thanks for using : )\n";
 }
 
 string Shell::getDirName() {
@@ -186,11 +209,10 @@ bool Shell::parseCommand() {
 }
 
 void Shell::execute() {
-    
     if (background == false) {
         if (!exec_cd()) return;
         string command = rebuildCommand();
-        system(command.c_str());
+        exec_command(command);
     }
     else {
         pid_t pid;
@@ -200,7 +222,7 @@ void Shell::execute() {
             string initcommand = rebuildCommand();
             if (!exec_cd()) return;
             string command = rebuildCommand();
-            system(command.c_str());
+            exec_command(command);
             out << "\n[" << count << "]" <<"+  Done\t" << initcommand << "\n"; 
             exit(EXIT_FAILURE);
         }
