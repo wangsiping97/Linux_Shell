@@ -22,7 +22,7 @@ private:
     istream& in; // input
     ostream& out; // output
     vector<string> vcmd; // vector of command
-    string workPath; // 工作目录
+    string workPath; // work path of the program
     string defaultPath; // default path
     string name; // name of the user
     bool background; // is the command executed in background
@@ -45,17 +45,20 @@ public:
 };
 
 /**
- * contruct function
- * initialize the background and count
+ * Contruct function
+ * Initialize the background and count
  */
 Shell::Shell(istream& _in, ostream& _out):in(_in), out(_out) {
     vcmd.clear();
     background = false;
     count = 0;
 }
+
 /**
- * init function
- * 
+ * Init function
+ * Init the shell program with an UI
+ * Initialize the work path as well as the default path
+ * Switch the work path to the default path
  */ 
 void Shell::init() {
     system("clear");
@@ -83,8 +86,23 @@ void Shell::init() {
     workPath = defaultPath;
 }
 
+/**
+ * Built-in "bye" function
+ * Exit the program with a bye-string
+ */ 
+void Shell::bye() {
+    out << "MyShell: Thanks for using : )\n";
+}
+
+/**
+ * Built-in cd function
+ * If the command is just "cd", switch the work path to the defaultPath
+ * If the command is "cd + [path]", switch the work path to [path]
+ * Then, consider if the command is to be executed in the background
+ * If not, change the work path of this program
+ */ 
 int Shell::cd(vector<string>& tempcmd) {
-    if (tempcmd.size() == 1) { // 默认去根目录
+    if (tempcmd.size() == 1) { // 默认目录
         if (chdir((defaultPath).c_str()) != 0) {
             perror("MyShell");
             return -1;
@@ -102,6 +120,12 @@ int Shell::cd(vector<string>& tempcmd) {
     return 0;
 }
 
+/**
+ * A function that executes the cd-series commands in the program
+ * First decide whether there are cd-series commands in the command
+ * Then decide whether the command is with an argument
+ * Then execute the command and update the command-queue
+ */ 
 bool Shell::exec_cd() {
     int sz = vcmd.size();
     if (sz == 0) return true;
@@ -157,10 +181,6 @@ int Shell::exec_command(string& cmdstring) {
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
     return status;
-}
-
-void Shell::bye() {
-    out << "MyShell: Thanks for using : )\n";
 }
 
 string Shell::getDirName() {
