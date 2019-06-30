@@ -23,7 +23,7 @@ private:
     ostream& out; // output
     vector<string> vcmd; // vector of command
     string workPath; // 工作目录
-    string rootPath; // 根目录
+    string defaultPath; // default path
     string name; // name of the user
     bool background; // is the command executed in background
     int count; // number of background commands
@@ -77,14 +77,14 @@ void Shell::init() {
         }
     }
     // get the root(default) path
-    rootPath = getcwd(NULL, 0);
+    defaultPath = getcwd(NULL, 0);
     // change the work path
-    workPath = rootPath;
+    workPath = defaultPath;
 }
 
 int Shell::cd(vector<string>& tempcmd) {
     if (tempcmd.size() == 1) { // 默认去根目录
-        if (chdir((rootPath).c_str()) != 0) {
+        if (chdir((defaultPath).c_str()) != 0) {
             perror("MyShell");
             return -1;
         }
