@@ -36,6 +36,8 @@ private:
     string workPath; // 工作目录
     string rootPath; // 根目录
     string name;
+    bool background;
+    int count;
 private: 
     void split(string& command, char flag);
     bool parseCommand();
@@ -54,6 +56,8 @@ public:
 
 Shell::Shell(istream& _in, ostream& _out):in(_in), out(_out) {
     vcmd.clear();
+    background = false;
+    count = 0;
 }
 
 void Shell::init() {
@@ -131,7 +135,11 @@ bool Shell::execute(vector<string>& tempcmd) {
     else // parent process
     {
         do {
-            waitpid(pid, &status, WUNTRACED);
+            if (background == false)
+                waitpid(pid, &status, WUNTRACED);
+            else {
+                out << "[" << count << "]" << "(" << pid << ")\n"; 
+            }
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
     delete args;
@@ -149,7 +157,8 @@ void Shell::cd(vector<string>& tempcmd) {
             perror("MyShell");
         }
     }
-    workPath = getcwd(NULL, 0);
+    if (background == false)
+        workPath = getcwd(NULL, 0);
 }
 
 void Shell::help() {
@@ -166,11 +175,18 @@ void Shell::bye() {
 bool Shell::parseCommand() {
     if (vcmd.empty()) // An empty command was entered.
     {
-        return true;
+        if (background == false)
+            return true;
+        if (background == true) {
+            out << "MyShell: syntax error near unexpected token `&'\n";
+            return true;
+        }
     }
     if (vcmd[0] == "bye" && vcmd.size() == 1) {
-        bye();
-        return false;
+        if (background == false) {
+            bye();
+            return false;
+        }
     }
     // check if there are multiple commands in the line, then execute all the commands.
     vector<string> tempcmd;
@@ -191,17 +207,25 @@ void Shell::run() {
     string line;
     string dirName;
     int status;
-    // signal(SIGINT, SIG_IGN); // 屏蔽 ctrl + c
     do {
         dirName = getDirName();
         if (dirName == name) dirName = "~";
         out << "MyShell:" << dirName << " " << name << "$ ";
         getline(cin, line);
         split(line, ' ');
-        if (vcmd.back() != "*") status = parseCommand();
-        else {
-            status = 0;
+        // if (vcmd.back() != "*") status = parseCommand();
+        // else {
+        //     status = 0;
+        // }
+        if (vcmd.back() == "*") {
+            background = true;
+            vcmd.pop_back();
+            count++;
         }
+        else {
+            background = false;
+        }
+        status = parseCommand();
     } while (status);
 }
 
