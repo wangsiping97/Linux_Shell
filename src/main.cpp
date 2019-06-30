@@ -41,11 +41,12 @@ private:
 private: 
     void split(string& command, char flag);
     bool parseCommand();
-    bool execute(vector<string>& tempcmd);
+    bool execute();
     string getPath();
     void cd(vector<string>& tempcmd);
     void help();
     void bye();
+    int myexecvp(vector<string> tempcmd);
 public: 
     Shell(istream& _in, ostream& _out);
     string getDirName();
@@ -95,45 +96,34 @@ void Shell::split(string& command, char flag) {
         vcmd.push_back(temp);
 }
 
-bool Shell::execute(vector<string>& tempcmd) {
+bool Shell::execute() {
     pid_t pid;
     int status;
-    int argc = tempcmd.size();
-    if (argc == 0) // command starts with "&&"
-    {
-        out << "MyShell: syntax error near unexpected token `&&'\n";
-        return false;
-    }
-    if (tempcmd[0] == "cd" && tempcmd.size() <= 2) {
-        cd(tempcmd);
-        return true;
-    }
-    if (tempcmd[0] == "help") {
-        help();
-        return true;
-    }
-    char ** args = new char* [argc + 1];
-    for (int i = 0; i < argc; ++i) {
-        args[i] = (char*)tempcmd[i].data();
-    }
-    args[argc] = NULL;
-
     pid = fork();
-    if (pid == 0) // child process
-    {
-        if (execvp(args[0], args) == -1) {
-            perror("MyShell");
-            return false;
-        }
-        exit(EXIT_FAILURE);
+    if (pid == 0) {
+        // check if there are multiple commands in the line, then execute all the commands.
+        vector<string> tempcmd;
+        int res;
+        int i = 0;
+        int sz = vcmd.size();
+        do {
+            tempcmd.clear();
+            while (i < sz && vcmd[i] != "&&") {
+                tempcmd.push_back(vcmd[i]);
+                i++;
+            }
+            res = myexecvp(tempcmd);
+            if (res == -1) {
+                perror("MyShell");
+                return false;
+            }
+        } while (i <= sz && !res);
     }
-    else if (pid < 0) // error
-    {
+    else if (pid < 0) {
         perror("MyShell");
         return false;
     }
-    else // parent process
-    {
+    else {
         do {
             if (background == false)
                 waitpid(pid, &status, WUNTRACED);
@@ -142,7 +132,6 @@ bool Shell::execute(vector<string>& tempcmd) {
             }
         } while (!WIFEXITED(status) && !WIFSIGNALED(status));
     }
-    delete args;
     return true;
 }
 
@@ -168,39 +157,63 @@ void Shell::help() {
 }
 
 void Shell::bye() {
-    system ("clear");
-    out << "Thanks for using ~\n";
+    out << "MyShell: Thanks for using ~\n";
+}
+
+int Shell::myexecvp(vector<string> tempcmd) {
+    int argc = tempcmd.size();
+    if (argc == 0) // command starts with "&&"
+    {
+        return 0;
+    }
+    if (tempcmd[0] == "cd" && tempcmd.size() <= 2) {
+        cd(tempcmd);
+        return 0;
+    }
+    if (tempcmd[0] == "help") {
+        help();
+        return 0;
+    }
+    if (tempcmd[0] == "bye" && tempcmd.size() == 1) {
+        bye();
+        return 0;
+    }
+    char ** args = new char* [argc + 1];
+    for (int i = 0; i < argc; ++i) {
+        args[i] = (char*)tempcmd[i].data();
+    }
+    args[argc] = NULL;
+    return execvp(args[0], args);
 }
 
 bool Shell::parseCommand() {
+    if (vcmd.empty()) return true;
+    if (vcmd.back() == "*") {
+        background = true;
+        vcmd.pop_back();
+        count++;
+    }
+    else {
+        background = false;
+    }
+    if (vcmd[0] == "bye" && vcmd.size() == 1 && background == false) {
+        bye();
+        return false;
+    }
     if (vcmd.empty()) // An empty command was entered.
     {
         if (background == false)
             return true;
         if (background == true) {
-            out << "MyShell: syntax error near unexpected token `&'\n";
+            out << "MyShell: syntax error near unexpected token `*'\n";
             return true;
         }
     }
-    if (vcmd[0] == "bye" && vcmd.size() == 1) {
-        if (background == false) {
-            bye();
-            return false;
-        }
+    if (vcmd[0] == "&&") {
+        out << "MyShell: syntax error near unexpected token `&&'\n";
+        return true;
     }
-    // check if there are multiple commands in the line, then execute all the commands.
-    vector<string> tempcmd;
-    int i = -1;
-    int sz = vcmd.size();
-    do {
-        i++;
-        tempcmd.clear();
-        while (i < sz && vcmd[i] != "&&") {
-            tempcmd.push_back(vcmd[i]);
-            i++;
-        }
-    } while (i <= sz && execute(tempcmd));
-    return true;
+    return execute();
 }
 
 void Shell::run() {
@@ -213,18 +226,6 @@ void Shell::run() {
         out << "MyShell:" << dirName << " " << name << "$ ";
         getline(cin, line);
         split(line, ' ');
-        // if (vcmd.back() != "*") status = parseCommand();
-        // else {
-        //     status = 0;
-        // }
-        if (vcmd.back() == "*") {
-            background = true;
-            vcmd.pop_back();
-            count++;
-        }
-        else {
-            background = false;
-        }
         status = parseCommand();
     } while (status);
 }
