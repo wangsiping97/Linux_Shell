@@ -297,7 +297,7 @@ void Shell::execute()
                 string command = rebuildCommand();
                 if (!command.empty()) exec_command(command);
             }
-            out << "\n[" << count << "]" <<"+  Done\t" << cmdstring << "\n"; 
+            out << "\n[" << count << "]" <<"+  Done\t" << cmdstring; 
             exit(EXIT_FAILURE);
         }
         /* fork error */
