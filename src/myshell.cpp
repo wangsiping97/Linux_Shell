@@ -305,7 +305,7 @@ void Shell::execute()
             fout << "[";
             fout << count;
             fout << "]";
-            fout <<"+  Done              ";
+            fout <<"+  Done\t\t";
             fout << cmdstring << endl;
             // fout << cmdstring; 
             exit(EXIT_FAILURE);
