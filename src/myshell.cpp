@@ -111,7 +111,7 @@ bool Shell::exec_cd()
             vcmd.clear();
             if(cd(tempcmd)) return false;
         }
-        else if (vcmd[1] == "&&") // there is a "cd" with no argument and other commands
+        else if (vcmd[1] == joiner) // there is a "cd" with no argument and other commands
         {
             tempcmd.push_back(vcmd[0]);
             vcmd.erase(vcmd.begin());
@@ -131,7 +131,7 @@ bool Shell::exec_cd()
             tempcmd.push_back(vcmd[1]);
             vcmd.erase(vcmd.begin());
             vcmd.erase(vcmd.begin());
-            vcmd.erase(vcmd.begin()); // pop "&&" from the command queue
+            vcmd.erase(vcmd.begin()); // pop joiner from the command queue
             if(cd(tempcmd)) return false;
         }
     }
@@ -200,18 +200,18 @@ void Shell::split(string& command, char flag)
 
 /**
  * Combine some short commands to a string, so that to be executed
- * Jump the cd-series comamnds as well as "&&"
+ * Jump the cd-series comamnds as well as joiner
  * Update `vcmd`
  */ 
 string Shell::rebuildCommand() 
 {
     string command;
     command.clear();
-    if (!vcmd.empty() && vcmd[0] == "&&") //  the commands start with an "&&"
+    if (!vcmd.empty() && vcmd[0] == joiner) //  the commands start with an joiner
     {
         vcmd.erase(vcmd.begin());
     }
-    while (!vcmd.empty() && vcmd[0] != "cd" && vcmd[0] != "&&") // jump the cd-series commands
+    while (!vcmd.empty() && vcmd[0] != "cd" && vcmd[0] != joiner) // jump the cd-series commands
     {
         command += vcmd[0];
         command += " ";
@@ -237,9 +237,9 @@ bool Shell::parseCommand()
         bye();
         return false;
     }
-    if (vcmd[0] == "&&") 
+    if (vcmd[0] == joiner) 
     {
-        out << shell_name.data() << ": syntax error near unexpected token `&&'\n";
+        out << shell_name.data() << ": syntax error near unexpected token `" << joiner <<"'\n";
         return true;
     }
     if (vcmd[0] == "*") 
