@@ -54,7 +54,7 @@ void Shell::init()
  */ 
 void Shell::bye() 
 {
-    out << "MyShell: Thanks for using : )\n";
+    out << "MyShell: Thanks for using : )\n\n\n[进程已完成]\n\n";
 }
 
 /**
