@@ -34,17 +34,12 @@ void Shell::init()
     out << "                            by Siping Wang @ THU                        \n";
     out << string(5, '\n');
     split(workPath, '/');
-    // get the user's name
-    if (vcmd.size() == 2) name = vcmd[1];
-    else name = vcmd[2];
+    name = vcmd[2];
     // cd to the user's default path
     if (chdir(("/" + vcmd[1] + "/" + name).c_str()) != 0) 
     {
-        if (chdir(("/" + name).c_str()) != 0) 
-        {
-            perror("ERROR");
-            EXIT_FAILURE;
-        }
+        perror("ERROR");
+        EXIT_FAILURE;
     }
     // get the root(default) path
     defaultPath = getcwd(NULL, 0);
