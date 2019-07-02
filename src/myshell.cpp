@@ -334,18 +334,16 @@ void Shell::run()
     {
         dirName = getDirName();
         if (dirName == name) dirName = "~";
-        ifstream fread (fpath);
+        ifstream fread (fpath); // open the output file
         string line;
-        while (getline(fread, line)) {
+        while (getline(fread, line)) // if the file is not empty
+        {
             out << line << endl;
         }
-        ofstream fout (fpath);
-        // output the prompt
-        out << shell_name.data() << ":" << dirName << " " << name << "$ ";
-        // read the command from the keyboard
-        getline(cin, cmdstring);
-        // split the command with ' '
-        split(cmdstring, ' ');
+        ofstream fout (fpath); // clear the file
+        out << shell_name.data() << ":" << dirName << " " << name << "$ "; // output the prompt
+        getline(cin, cmdstring); // read the command from the keyboard
+        split(cmdstring, ' '); // split the command with ' '
         status = parseCommand();
     } 
     while (status);
