@@ -4,13 +4,17 @@
 #include <sstream> 
 #include <unistd.h>
 #include <signal.h>
+#include <fstream>
 
 using std::istream;
 using std::ostream;
 using std::cin;
 using std::cout;
+using std::endl;
 using std::string;
 using std::vector;
+using std::ifstream;
+using std::ofstream; 
 
 class Shell 
 {
@@ -34,6 +38,7 @@ private:
     /* about background-running */
     bool background; // is the command executed in background
     int count; // number of background commands
+    string fpath; // a file that store the information of done-jobs that executed in the background
 
 private: 
 

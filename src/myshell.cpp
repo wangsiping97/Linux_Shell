@@ -14,6 +14,8 @@ Shell::Shell(istream& _in, ostream& _out, string _shell_name, string _joiner):in
     count = 0;
     name = "user";
     workPath = getcwd(NULL, 0); // get the workPath 
+    fpath = workPath + "/../bin/output";
+    ofstream fout (fpath); // clear the file
 }
 
 /**
@@ -299,7 +301,13 @@ void Shell::execute()
                 string command = rebuildCommand();
                 if (!command.empty()) exec_command(command);
             }
-            out << "\n[" << count << "]" <<"+  Done\t" << cmdstring; 
+            ofstream fout (fpath, std::ios::app); 
+            fout << "[";
+            fout << count;
+            fout << "]";
+            fout <<"+  Done              ";
+            fout << cmdstring << endl;
+            // fout << cmdstring; 
             exit(EXIT_FAILURE);
         }
         /* fork error */
@@ -326,6 +334,12 @@ void Shell::run()
     {
         dirName = getDirName();
         if (dirName == name) dirName = "~";
+        ifstream fread (fpath);
+        string line;
+        while (getline(fread, line)) {
+            out << line << endl;
+        }
+        ofstream fout (fpath);
         // output the prompt
         out << shell_name.data() << ":" << dirName << " " << name << "$ ";
         // read the command from the keyboard
