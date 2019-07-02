@@ -20,6 +20,8 @@ private:
     istream& in; // input
     ostream& out; // output
     string name; // name of the user
+    string shell_name; // name of shell
+    string joiner; // joiner of multiple commands
 
     /* about command */
     string cmdstring; // the command read from the keyboard
@@ -51,7 +53,7 @@ private:
 
 public: 
 
-    Shell(istream& _in, ostream& _out); // construct function
+    Shell(istream& _in, ostream& _out, string _shell_name, string _joiner); // construct function
     string getDirName(); // get the name of the directory in the workpath
     void init(); // init the shell
     void run(); // run the shell

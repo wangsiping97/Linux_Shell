@@ -3,14 +3,17 @@
 
 /**
  * Contruct function
- * Initialize the background and count
+ * Initialize the background, count, name (default by the program)
+ * Get the work path of the program
  */
-Shell::Shell(istream& _in, ostream& _out):in(_in), out(_out) 
+Shell::Shell(istream& _in, ostream& _out, string _shell_name, string _joiner):in(_in), out(_out), shell_name(_shell_name), joiner(_joiner)
 {
     vcmd.clear();
     cmdstring.clear();
     background = false;
     count = 0;
+    name = "user";
+    workPath = getcwd(NULL, 0); // get the workPath 
 }
 
 /**
@@ -18,6 +21,7 @@ Shell::Shell(istream& _in, ostream& _out):in(_in), out(_out)
  * Init the shell program with an UI
  * Initialize the work path as well as the default path
  * Switch the work path to the default path
+ * Update `name`
  */ 
 void Shell::init() 
 {
@@ -27,8 +31,6 @@ void Shell::init()
     out << string(3, '\n');
     out << "                            by Siping Wang @ THU                        \n";
     out << string(5, '\n');
-    // get the workPath 
-    workPath = getcwd(NULL, 0);
     split(workPath, '/');
     // get the user's name
     if (vcmd.size() == 2) name = vcmd[1];
@@ -54,7 +56,7 @@ void Shell::init()
  */ 
 void Shell::bye() 
 {
-    out << "MyShell: Thanks for using : )\n\n\n[进程已完成]\n\n";
+    out << shell_name << ": Thanks for using : )\n\n\n[进程已完成]\n\n";
 }
 
 /**
@@ -70,7 +72,7 @@ int Shell::cd(vector<string>& tempcmd)
     { 
         if (chdir((defaultPath).c_str()) != 0) 
         {
-            perror("MyShell");
+            perror(shell_name.data());
             return -1;
         }
     }
@@ -78,7 +80,7 @@ int Shell::cd(vector<string>& tempcmd)
     {
         if (chdir(tempcmd[1].c_str()) != 0) // cd with an argument, to the argument path
         { 
-            perror("MyShell");
+            perror(shell_name.data());
             return -1;
         }
     }
@@ -156,7 +158,7 @@ int Shell::exec_command(string& cmdstring)
     /* child process */
     else if(pid == 0)
     {
-        execl("/bin/sh", "MyShell", "-c", cmdstring.data(), (char *)0);
+        execl("/bin/sh", shell_name.data(), "-c", cmdstring.data(), (char *)0);
     }
     /* parent process */
     else 
@@ -237,12 +239,12 @@ bool Shell::parseCommand()
     }
     if (vcmd[0] == "&&") 
     {
-        out << "MyShell: syntax error near unexpected token `&&'\n";
+        out << shell_name.data() << ": syntax error near unexpected token `&&'\n";
         return true;
     }
     if (vcmd[0] == "*") 
     {
-        out << "MyShell: syntax error near unexpected token `*'\n";
+        out << shell_name.data() << ": syntax error near unexpected token `*'\n";
         return true;
     }
 
@@ -303,7 +305,7 @@ void Shell::execute()
         /* fork error */
         else if (pid < 0) 
         {
-            perror("MyShell");
+            perror(shell_name.data());
         }
         /* parent process */
         else 
@@ -325,7 +327,7 @@ void Shell::run()
         dirName = getDirName();
         if (dirName == name) dirName = "~";
         // output the prompt
-        out << "MyShell:" << dirName << " " << name << "$ ";
+        out << shell_name.data() << ":" << dirName << " " << name << "$ ";
         // read the command from the keyboard
         getline(cin, cmdstring);
         // split the command with ' '
