@@ -1,8 +1,5 @@
 # <center>计算机系统原理<br>大作业报告</center>
 
-<center>
-  经56 王思萍 2015012527
-</center>
 ## My Shell
 
 **My Shell** 是一个基于 `MAC` 及 `Linux` 系统的命令行解析器。
@@ -26,7 +23,7 @@
 - 重复输入
 - 输入 `bye` 时退出程序
 
-![1](/Users/wangsiping/Documents/GitHub/File_Allocation_Simulator/doc/1.png)
+![1](https://github.com/wangsiping97/Linux_Shell/blob/master/doc/1.png)
 
 ### 1.2 高级功能
 
@@ -34,13 +31,13 @@
 - 结尾为 `*` 时，将指令放入后台执行
 - 从键盘输入 `ctrl - c` 时，不终止程序
 
-![2](/Users/wangsiping/Documents/GitHub/File_Allocation_Simulator/doc/2.png)
+![2](https://github.com/wangsiping97/Linux_Shell/blob/master/doc/2.png)
 
 ### 1.3 增设功能
 
 - 能够让用户自定义设置 Shell 名称与命令连接符
 
-![3](/Users/wangsiping/Documents/GitHub/File_Allocation_Simulator/doc/3.png)
+![3](https://github.com/wangsiping97/Linux_Shell/blob/master/doc/3.png)
 
 - 程序启动时，首先将工作路径定位到用户的根目录下
 - 程序启动时，能够自动识别用户名并在每次输入时打印出来
