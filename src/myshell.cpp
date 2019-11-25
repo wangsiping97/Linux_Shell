@@ -1,5 +1,27 @@
 #include "myshell.h"
 
+vector<string> Shell::done_commands;
+
+void* Shell::receive_info(void* __this) {
+    Shell * _this =(Shell *)__this;
+    int new_s;
+    int len;
+    char buf[MAX_LINE];
+    while (1)
+    {
+        if ((new_s=accept(_this->s, (struct sockaddr *)&_this->sin, (socklen_t *)&len)) < 0)
+        {
+            perror("accept error");
+            return 0;
+        }
+        while ((len=recv(new_s, buf, sizeof(buf),0))>0)
+        {
+            _this->done_commands.push_back(buf);
+        }
+        close(new_s);
+    }
+    return 0;
+}
 
 /**
  * Contruct function
@@ -14,8 +36,23 @@ Shell::Shell(istream& _in, ostream& _out, string _shell_name, string _joiner):in
     count = 0;
     name = "user";
     workPath = getcwd(NULL, 0); // get the workPath 
-    fpath = workPath + "/../bin/output";
-    ofstream fout (fpath); // clear the file
+    done_commands.clear();
+	bzero((void *)&sin, sizeof(sin));
+	sin.sin_family=AF_INET;
+	sin.sin_addr.s_addr=INADDR_ANY;
+	sin.sin_port=htons(SERVER_PORT);
+
+	if ((s=socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+		perror("simplex-talk-server: socket");
+		exit(-1);
+	}
+	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+		perror("simplex-talk-server: bind");
+		exit(-1);
+	}
+	listen(s, MAX_PENDING);
+    pthread_t tid;
+    pthread_create(&tid, NULL, receive_info, (void*)this);
 }
 
 /**
@@ -296,13 +333,35 @@ void Shell::execute()
                 string command = rebuildCommand();
                 if (!command.empty()) exec_command(command);
             }
-            ofstream fout (fpath, std::ios::app); 
-            fout << "[";
-            fout << count;
-            fout << "]";
-            fout <<"+  Done\t\t";
-            fout << cmdstring << endl;
-            // fout << cmdstring; 
+            struct hostent *hp;
+            struct sockaddr_in sin;
+            char buf[MAX_LINE];
+            int len;
+            int s;
+            hp=gethostbyname("localhost");
+            if(!hp) {
+                perror("stalk: unknown host");
+                return;
+            }
+            
+            bzero((void *)&sin, sizeof(sin));
+            sin.sin_family=AF_INET;
+            bcopy(hp->h_addr, (char *)&sin.sin_addr, hp->h_length);
+            sin.sin_port=htons(SERVER_PORT);
+
+            if ((s=socket(PF_INET, SOCK_STREAM, 0)) < 0) {
+                perror("simplex-talk-client: socket");
+                return;
+            }
+            if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
+                perror("simplex-talk-client: connect");
+                close(s);
+                return;
+            }
+            sprintf(buf, "[%d]+  Done\t\t%s", count, cmdstring.c_str());
+            buf[MAX_LINE-1]='\0';
+            len=strlen(buf)+1;
+            send(s, buf, len, 0);
             exit(EXIT_FAILURE);
         }
         /* fork error */
@@ -329,13 +388,11 @@ void Shell::run()
     {
         dirName = getDirName();
         if (dirName == name) dirName = "~";
-        ifstream fread (fpath); // open the output file
-        string line;
-        while (getline(fread, line)) // if the file is not empty
+        for (int i = 0; i < done_commands.size(); ++i)
         {
-            out << line << endl;
+            out << done_commands[i] << endl;
         }
-        ofstream fout (fpath); // clear the file
+        done_commands.clear();
         out << shell_name.data() << ":" << dirName << " " << name << "$ "; // output the prompt
         getline(cin, cmdstring); // read the command from the keyboard
         split(cmdstring, ' '); // split the command with ' '

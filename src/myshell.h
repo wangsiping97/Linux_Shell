@@ -5,6 +5,15 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fstream>
+#include <pthread.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+
+#define SERVER_PORT	5432
+#define MAX_PENDING	5
+#define MAX_LINE	256
 
 using std::istream;
 using std::ostream;
@@ -38,8 +47,11 @@ private:
     /* about background-running */
     bool background; // is the command executed in background
     int count; // number of background commands
-    string fpath; // a file that store the information of done-jobs that executed in the background
 
+    /* about communication between processes */
+    static vector<string> done_commands;
+    struct sockaddr_in sin;
+	int s;
 private: 
 
     /* parsing the command */
@@ -56,9 +68,12 @@ private:
     int exec_command(string& cmdstring); // execute the command (not including "cd")
     void execute(); // execute the command
 
+    /* receive information from child process */
+    static void* receive_info(void* __this);
 public: 
 
     Shell(istream& _in, ostream& _out, string _shell_name, string _joiner); // construct function
+    ~Shell() {pthread_exit(NULL);}
     string getDirName(); // get the name of the directory in the workpath
     void init(); // init the shell
     void run(); // run the shell
