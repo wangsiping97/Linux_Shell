@@ -43,11 +43,11 @@ Shell::Shell(istream& _in, ostream& _out, string _shell_name, string _joiner):in
 	sin.sin_port=htons(SERVER_PORT);
 
 	if ((s=socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-		perror("simplex-talk-server: socket");
+		perror("socket");
 		exit(-1);
 	}
 	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-		perror("simplex-talk-server: bind");
+		perror("bind");
 		exit(-1);
 	}
 	listen(s, MAX_PENDING);
@@ -338,23 +338,19 @@ void Shell::execute()
             char buf[MAX_LINE];
             int len;
             int s;
+
             hp=gethostbyname("localhost");
-            if(!hp) {
-                perror("stalk: unknown host");
-                return;
-            }
-            
             bzero((void *)&sin, sizeof(sin));
             sin.sin_family=AF_INET;
             bcopy(hp->h_addr, (char *)&sin.sin_addr, hp->h_length);
             sin.sin_port=htons(SERVER_PORT);
 
             if ((s=socket(PF_INET, SOCK_STREAM, 0)) < 0) {
-                perror("simplex-talk-client: socket");
+                perror("socket");
                 return;
             }
             if (connect(s, (struct sockaddr *)&sin, sizeof(sin)) < 0) {
-                perror("simplex-talk-client: connect");
+                perror("connect");
                 close(s);
                 return;
             }
